@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -12,18 +15,44 @@ class _HomePageState extends State<HomePage> {
   final List<String> _tarefas = [];
   final _formKey = GlobalKey<FormState>();
 
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    _caregarTarefas();
+  }
+
   void _addTarefa() {
     if (_formKey.currentState!.validate()) {
       setState(() {
         _tarefas.add(_controller.text);
         _controller.clear();
+        _salvarTarefas();
       });
     }
+  }
+
+  void _caregarTarefas() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? tarefaJson = prefs.getString('tarefas');
+
+    if (tarefaJson != null) {
+      setState(() {
+        _tarefas.addAll(List<String>.from(json.decode(tarefaJson)));
+      });
+    }
+  }
+
+  void _salvarTarefas() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String tarefaJson = json.encode(_tarefas);
+    await prefs.setString('tarefas', tarefaJson);
   }
 
   void _removerTarefa(int index) {
     setState(() {
       _tarefas.removeAt(index);
+      _salvarTarefas();
     });
   }
 
@@ -43,7 +72,6 @@ class _HomePageState extends State<HomePage> {
               key: _formKey,
               child: TextFormField(
                 controller: _controller,
-                autovalidateMode: AutovalidateMode.always,
                 decoration: const InputDecoration(
                     labelText: 'Digite uma tarefa',
                     border: OutlineInputBorder()),
