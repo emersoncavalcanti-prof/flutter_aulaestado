@@ -10,9 +10,10 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final TextEditingController _controller = TextEditingController();
   final List<String> _tarefas = [];
+  final _formKey = GlobalKey<FormState>();
 
   void _addTarefa() {
-    if (_controller.text.isNotEmpty) {
+    if (_formKey.currentState!.validate()) {
       setState(() {
         _tarefas.add(_controller.text);
         _controller.clear();
@@ -38,16 +39,31 @@ class _HomePageState extends State<HomePage> {
         children: [
           Padding(
             padding: const EdgeInsets.all(10.0),
-            child: TextField(
-              controller: _controller,
-              decoration: const InputDecoration(
-                  labelText: 'Digite uma tarefa', border: OutlineInputBorder()),
+            child: Form(
+              key: _formKey,
+              child: TextFormField(
+                controller: _controller,
+                autovalidateMode: AutovalidateMode.always,
+                decoration: const InputDecoration(
+                    labelText: 'Digite uma tarefa',
+                    border: OutlineInputBorder()),
+                validator: (value) {
+                  if (value!.isEmpty) {
+                    return 'Por favor digite uma tarefa';
+                  }
+
+                  if (value.length < 3) {
+                    return 'Digite pelo menos 3 caracteres';
+                  }
+                  return null;
+                },
+              ),
             ),
           ),
-          const SizedBox(height: 10),
           InkWell(
             onTap: _addTarefa,
             child: Container(
+              margin: const EdgeInsets.all(10),
               width: double.infinity,
               height: 40,
               decoration: const BoxDecoration(
